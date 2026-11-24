@@ -119,6 +119,27 @@ def _pearson(pairs):
     return max(-1.0, min(1.0, cross))
 
 
+def _scan(readings, sample_seconds):
+    """采样网格、两路读数与缺测时段，供滞后扫描和归档复原核对共用。"""
+    start, grid, span = _sample_grid(readings, sample_seconds)
+    fan, sound = (
+        {slot: record[key] for slot, record in grid.items() if record[key] is not None}
+        for key, _ in _CHANNELS
+    )
+    gaps = _missing_periods(grid, span, start, sample_seconds, "整行未采集")
+    for series, (_, label) in zip((fan, sound), _CHANNELS):
+        gaps.extend(_missing_periods(series, span, start, sample_seconds, label))
+    gaps.sort(key=lambda gap: (gap["start"], gap["channel"]))
+    return gaps, fan, sound, grid, span
+
+
+def missing_positions(rows, sample_seconds):
+    """按采样格列出整行未采集与各通道缺测时段。"""
+    readings = validate_rows(rows)
+    gaps, _, _, _, _ = _scan(readings, sample_seconds)
+    return gaps
+
+
 def _lag_row(lag, fan, sound, span, sample_seconds, min_pairs):
     pairs = [(value, sound[slot + lag]) for slot, value in fan.items() if slot + lag in sound]
     count = len(pairs)
@@ -176,21 +197,13 @@ def analyze(rows, normalized_params):
     readings = validate_rows(rows)
     options = _run_parameters(normalized_params)
     interval, max_lag, min_pairs = (options[key] for key in ("sample_seconds", "max_lag", "min_pairs"))
-    start, grid, span = _sample_grid(readings, interval)
-    fan, sound = (
-        {slot: record[key] for slot, record in grid.items() if record[key] is not None}
-        for key, _ in _CHANNELS
-    )
+    gaps, fan, sound, grid, span = _scan(readings, interval)
     lags = [_lag_row(lag, fan, sound, span, interval, min_pairs) for lag in range(-max_lag, max_lag + 1)]
     valid = [row for row in lags if row["pearson_r"] is not None]
     peak = max(valid, key=lambda row: (
         round(abs(row["pearson_r"]), 12), row["pair_count"], -abs(row["lag_samples"]), -row["lag_samples"],
     ), default=None)
     headline, action = _interpret(peak, max_lag)
-    gaps = _missing_periods(grid, span, start, interval, "整行未采集")
-    for series, (_, label) in zip((fan, sound), _CHANNELS):
-        gaps.extend(_missing_periods(series, span, start, interval, label))
-    gaps.sort(key=lambda gap: (gap["start"], gap["channel"]))
     first, last = readings[0], readings[-1]
     zero = lags[max_lag]
     return {

@@ -3,7 +3,27 @@ from src.utils.time import iso
 
 def dataset(item):
     return {'id': item.id, 'name': item.name, 'filename': item.filename, 'row_count': item.row_count,
-            'checksum': item.checksum, 'author': item.author, 'created_at': iso(item.created_at)}
+            'checksum': item.checksum, 'author': item.author, 'created_at': iso(item.created_at),
+            'archived': item.rows is None}
+
+
+def archive(item):
+    return {'id': item.id, 'dataset_id': item.dataset_id, 'state': item.state, 'error': item.error,
+            'resume_state': item.resume_state, 'row_count': item.row_count,
+            'original_bytes': item.original_bytes, 'map_bytes': item.map_bytes,
+            'unique_count': item.unique_count, 'created_count': item.created_count,
+            'reclaimed_bytes': item.reclaimed_bytes, 'attempts': item.attempts,
+            'has_mapping': bool(item.reading_ids),
+            'created_at': iso(item.created_at), 'updated_at': iso(item.updated_at),
+            'archived_at': iso(item.archived_at), 'restored_at': iso(item.restored_at)}
+
+
+def archive_item(source, item):
+    view = {'dataset_id': source.id, 'name': source.name, 'row_count': source.row_count,
+            'rows_released': source.rows is None, 'state': None, 'archive': None}
+    if item:
+        view.update(state=item.state, archive=archive(item))
+    return view
 
 
 def run(item, detail=False):

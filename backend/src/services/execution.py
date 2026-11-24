@@ -57,7 +57,15 @@ def claim():
         job.status = Status.RUNNING
         job.attempt += 1
         job.lease_until = stamp + timedelta(minutes=3)
-        records = db.get(Dataset, job.dataset_id).rows
+        dataset = db.get(Dataset, job.dataset_id)
+        records = dataset.rows if dataset else None
+        if records is None:
+            job.status = Status.FAILED
+            job.lease_until = None
+            job.finished_at = stamp
+            job.error = '数据批次已归档，请解档后重新运行'
+            record(db, 'worker', 'analysis.failed', job.id, reason=job.error)
+            return None
         return job.id, job.attempt, records, job.params
 
 

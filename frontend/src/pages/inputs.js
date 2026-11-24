@@ -20,6 +20,7 @@ export async function inputs(route, refresh) {
       datasets.map(item=>el('option',{value:item.id,selected:item.id === selected.id}, item.name))),
     link('使用此批次运行',`#run/${detail.id}`,{class:'quiet'})),
     p(`${detail.filename} · ${detail.row_count} 行 · ${date(detail.created_at)}`,'filename'),
+    detail.archived && p('该批次已归档，原读数已释放；可在「交班与导出」页复原核对或解档。','subtle'),
     table(columns,detail.rows,{caption:'批次明细',pageSize:16}),
     el('div',{class:'pagination'},
       route.offset > 0 && link('上一批明细',`#inputs/${detail.id}/${Math.max(0,route.offset-16)}`,{class:'quiet'}),

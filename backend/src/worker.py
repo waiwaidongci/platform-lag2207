@@ -1,6 +1,7 @@
 import logging
 import time
 from pathlib import Path
+from src.services.archiving import advance as advance_archive
 from src.services.execution import claim, execute, materialize_due
 from src.utils.wakeup import wait
 
@@ -18,7 +19,7 @@ def main():
             if lease:
                 execute(lease)
                 heartbeat.touch()
-            else:
+            elif not advance_archive():
                 wait()
         except Exception:
             log.exception('Worker cycle failed')

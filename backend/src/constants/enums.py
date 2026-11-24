@@ -15,3 +15,13 @@ class Review(StrEnum):
     PENDING = 'pending'
     ACCEPTED = 'accepted'
     RETURNED = 'returned'
+
+class Archive(StrEnum):
+    BUILDING = 'building'
+    VERIFYING = 'verifying'
+    RELEASING = 'releasing'
+    ARCHIVED = 'archived'
+    RESTORING = 'restoring'
+    RECLAIMING = 'reclaiming'
+    RETIRED = 'retired'
+    FAILED = 'failed'

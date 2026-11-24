@@ -10,3 +10,10 @@ export function value(input) {
   return Array.isArray(input) ? input.join('、') : String(input);
 }
 export const date = input => input ? dateFormatter.format(new Date(input)) : '—';
+
+export function bytes(input) {
+  if (input === null || input === undefined) return '—';
+  if (input < 1024) return `${input} B`;
+  if (input < 1024 ** 2) return `${(input / 1024).toFixed(1)} KB`;
+  return `${(input / 1024 ** 2).toFixed(2)} MB`;
+}

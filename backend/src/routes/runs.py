@@ -34,8 +34,11 @@ def index(db: Session = Depends(connection), actor: User = Depends(current)):
 @router.post('', status_code=202)
 def create(body: RunRequest, db: Session = Depends(connection),
            actor: User = Depends(allow(Role.ADMIN, Role.ANALYST))):
-    if not db.get(Dataset, body.dataset_id):
+    dataset = db.get(Dataset, body.dataset_id, with_for_update=True)
+    if not dataset:
         raise HTTPException(404, '找不到指定的数据批次')
+    if dataset.rows is None:
+        raise HTTPException(409, '该批次已归档，请先在交班与导出页解档')
     item = Run(name=body.name, dataset_id=body.dataset_id, params=normalize_params(body.params), author=actor.username)
     db.add(item)
     db.flush()

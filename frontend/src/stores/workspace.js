@@ -18,5 +18,11 @@ export const workspace = {
   deliveries: () => call('/deliveries'),
   schedule: data => call('/schedules', data),
   disable: id => call(`/schedules/${id}/disable`, {}),
+  archives: () => call('/archives'),
+  archiveDataset: id => call(`/datasets/${id}/archive`, {}),
+  restoreArchive: id => call(`/archives/${id}/restore`, {}),
+  retryArchive: id => call(`/archives/${id}/retry`, {}),
+  abandonArchive: id => call(`/archives/${id}/abandon`, {}),
+  archivePreview: (id, seconds) => call(`/archives/${id}/preview?sample_seconds=${seconds}`),
   download: (path, filename) => saveFile(path, session.token, filename),
 };
